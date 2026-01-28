@@ -3,6 +3,11 @@
 /node_modules
 /build
 
+
+*.csv
+*accessKeys*
+.env
+
 # Logs
 logs
 *.log
