@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth API Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin:50px auto;
+            padding: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        input, button {
+            margin: 5px 0;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .response {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>ProSets Auth API Tester</h1>
+    
+    <div class="section">
+        <h2>Register</h2>
+        <input type="email" id="reg-email" placeholder="Email" value="test@example.com">
+        <input type="password" id="reg-password" placeholder="Password" value="Test123!">
+        <input type="text" id="reg-name" placeholder="Name" value="Test User">
+        <button onclick="register()">Register</button>
+        <div id="reg-response" class="response"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Login</h2>
+        <input type="email" id="login-email" placeholder="Email" value="test@example.com">
+        <input type="password" id="login-password" placeholder="Password" value="Test123!">
+        <button onclick="login()">Login</button>
+        <div id="login-response" class="response"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Get Current User (Protected)</h2>
+        <input type="text" id="token" placeholder="JWT Token (will auto-fill from login)">
+        <button onclick="getMe()">Get Me</button>
+        <div id="me-response" class="response"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        let authToken = '';
+
+        async function register() {
+            const response = document.getElementById('reg-response');
+            try {
+                const res = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('reg-email').value,
+                        password: document.getElementById('reg-password').value,
+                        name: document.getElementById('reg-name').value
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    response.className = 'response success';
+                    response.textContent = JSON.stringify(data, null, 2);
+                    authToken = data.access_token;
+                    document.getElementById('token').value = authToken;
+                } else {
+                    response.className = 'response error';
+                    response.textContent = `Error ${res.status}: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                response.className = 'response error';
+                response.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function login() {
+            const response = document.getElementById('login-response');
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('login-email').value,
+                        password: document.getElementById('login-password').value
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    response.className = 'response success';
+                    response.textContent = JSON.stringify(data, null, 2);
+                    authToken = data.access_token;
+                    document.getElementById('token').value = authToken;
+                } else {
+                    response.className = 'response error';
+                    response.textContent = `Error ${res.status}: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                response.className = 'response error';
+                response.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function getMe() {
+            const response = document.getElementById('me-response');
+            const token = document.getElementById('token').value || authToken;
+            
+            try {
+                const res = await fetch(`${API_BASE}/auth/me`, {
+                    headers: { 
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    response.className = 'response success';
+                    response.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    response.className = 'response error';
+                    response.textContent = `Error ${res.status}: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                response.className = 'response error';
+                response.textContent = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
